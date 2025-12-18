@@ -6,6 +6,7 @@ from io import BytesIO
 import base64
 import smtplib
 from email.mime.text import MIMEText
+import os
 from database import init_db, add_pet, get_pet
 
 # -------- CONFIGURACIÓN --------
@@ -91,4 +92,4 @@ def report_location():
 
 # -------- EJECUTAR --------
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)
