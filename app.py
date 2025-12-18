@@ -12,7 +12,7 @@ from database import init_db, add_pet, get_pet
 # -------- CONFIGURACIÓN --------
 app = Flask(__name__)
 
-# ⚠️ CONFIGURA TU CORREO AQUÍ (ver explicación abajo)
+# ⚠️ CONFIGURA TUS CREDENCIALES DE CORREO AQUÍ (en Render, usa "Environment Variables")
 EMAIL_USER = "paltacarlos9107@gmail.com"
 EMAIL_PASS = "hvuafcqbjpxeckmb"  # ¡No tu contraseña normal!
 
@@ -39,12 +39,13 @@ def register():
     # Guarda en la base de datos
     add_pet(pet_id, name, breed, description, owner_email)
 
-    # Genera el enlace del QR
-    # Forzar HTTPS en producción (Render)
-if os.environ.get("RENDER"):
-    qr_url = f"https://{request.host}/pet/{pet_id}"
-else:
-    qr_url = f"{request.url_root}pet/{pet_id}"
+    # Genera la URL del QR (¡SIEMPRE HTTPS EN RENDER!)
+    if os.environ.get("RENDER"):
+        # Render siempre define esta variable → producción
+        qr_url = f"https://pet-rescue-qr.onrender.com/pet/{pet_id}"
+    else:
+        # Desarrollo local
+        qr_url = f"{request.url_root}pet/{pet_id}"
 
     # Genera el código QR como imagen
     qr_img = qrcode.make(qr_url)
@@ -53,7 +54,7 @@ else:
     qr_base64 = base64.b64encode(buffered.getvalue()).decode()
 
     # Muestra el formulario + QR
-    return render_template("register.html", qr=qr_base64, qr_url=qr_url)
+    return render_template("register.html", qr=qr_base64, qr_url=qr_url, pet_id=name)
 
 @app.route("/pet/<pet_id>")
 def pet_page(pet_id):
@@ -97,4 +98,5 @@ def report_location():
 # -------- EJECUTAR --------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
+    # ¡CRÍTICO! Bind a 0.0.0.0 para que Render pueda acceder
     app.run(host="0.0.0.0", port=port, debug=False)
